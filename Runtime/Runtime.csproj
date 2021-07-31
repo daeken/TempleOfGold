@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Esprima" Version="2.0.2" />
+      <PackageReference Include="morelinq" Version="3.3.2" />
+      <PackageReference Include="Sigil" Version="5.0.0" />
+      <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+    </ItemGroup>
+
+</Project>
