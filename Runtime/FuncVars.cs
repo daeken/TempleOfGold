@@ -8,7 +8,11 @@ namespace Runtime {
 		public readonly Stack<Dictionary<string, ParameterExpression>> Scopes = new();
 		public readonly List<ParameterExpression> AllVars = new();
 
+		int AnonymousId = 0;
+
 		public FuncVars() => Scopes.Push(new());
+
+		public string Anonymous => $"$__anonymous_{AnonymousId++}";
 
 		public void Push() => Scopes.Push(new(Scopes.Peek()));
 		public void Pop() => Scopes.Pop();
@@ -25,17 +29,20 @@ namespace Runtime {
 			return null;
 		}
 
-		public ParameterExpression DefVar(string name) {
+		public ParameterExpression DefVar(string name = null) {
+			name ??= Anonymous;
 			if(Get(name) != null) throw new Exception($"Variable '{name}' already defined");
 			return TopLevel[name] = MakeVar(name);
 		}
 		
-		public ParameterExpression DefLet(string name) {
+		public ParameterExpression DefLet(string name = null) {
+			name ??= Anonymous;
 			if(Get(name) != null) throw new Exception($"Variable '{name}' already defined");
 			return Scopes.Peek()[name] = MakeVar(name);
 		}
 		
-		public ParameterExpression DefConst(string name) {
+		public ParameterExpression DefConst(string name = null) {
+			name ??= Anonymous;
 			if(Get(name) != null) throw new Exception($"Variable '{name}' already defined");
 			return Scopes.Peek()[name] = MakeVar(name);
 		}

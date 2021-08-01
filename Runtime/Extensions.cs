@@ -14,5 +14,8 @@ namespace Runtime {
 				bool bv => !bv, 
 				_ => false
 			})).Call(expr);
+
+		public static Expression Apply(this Expression expr, Func<dynamic, dynamic> functor) =>
+			functor.Call(expr);
 	}
 }

@@ -49,10 +49,20 @@ namespace Runtime {
 						return bf.Call(left, right);
 					case UpdateExpression ue:
 						var uv = Compile(ue.Argument);
-						return Expression.Block(
-							Expression.Assign(uv, Compile(new BinaryExpression("+", ue.Argument, new Literal(1.0, "1")))), 
-							uv
-						);
+						var inc = ue.Operator == UnaryOperator.Increment;
+						if(ue.Prefix)
+							return Expression.Block(
+								Expression.Assign(uv, inc ? uv.Apply(v => v + 1) : uv.Apply(v => v - 1)), 
+								uv
+							);
+						else {
+							var nvar = vars.DefConst();
+							return Expression.Block(
+								Expression.Assign(nvar, uv),
+								Expression.Assign(uv, inc ? nvar.Apply(v => v + 1) : nvar.Apply(v => v - 1)),
+								nvar
+							);
+						}
 					case ExpressionStatement es:
 						return Compile(es.Expression);
 					case Literal literal:
