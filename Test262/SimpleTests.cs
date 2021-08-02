@@ -6,11 +6,9 @@ namespace Test262 {
 		[Test]
 		public void Test1() {
 			var ec = new ExecutionContext();
-			ec.Eval(@"
-				var foo = 5;
-				var bar = 4 + 1;
-			");
-			Assert.AreEqual(ec["foo"], ec["bar"]);
+			Assert.AreEqual(ec.Eval(@"
+				5 + 6
+			"), 11);
 		}
 	}
 }

@@ -6,14 +6,7 @@ namespace Repl {
 	class Program {
 		static void Main(string[] args) {
 			var ec = new ExecutionContext();
-			while(true) {
-				Console.Write("> ");
-				var inp = Console.ReadLine();
-				if(inp == null) break;
-				var val = (string) (ec.Eval(inp)?.ToString());
-				if(val != null)
-					Console.WriteLine(val);
-			}
+			Console.WriteLine(ec.Eval(File.ReadAllText("test.js")));
 		}
 	}
 }

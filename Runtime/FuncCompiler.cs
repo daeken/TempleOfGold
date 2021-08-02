@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Linq;
-using System.Reflection;
 using Esprima.Ast;
 using Esprima.Utils;
+using Microsoft.CSharp.RuntimeBinder;
 using MoreLinq;
+using Binder = System.Reflection.Binder;
 using Expression = System.Linq.Expressions.Expression;
 
 namespace Runtime {
@@ -82,7 +84,6 @@ namespace Runtime {
 						}
 						return Expression.Block(defBlock);
 					case AssignmentExpression ae:
-						var aleft = Compile(ae.Left);
 						var aright = Compile(ae.Right);
 						Expression BinAssign(string op) =>
 							Compile(new BinaryExpression(op, ae.Left, ae.Right));
@@ -94,7 +95,12 @@ namespace Runtime {
 							AssignmentOperator.DivideAssign => BinAssign("/"), 
 							_ => throw new NotImplementedException($"Unsupported assignment operator '{ae.Operator}'")
 						};
-						return Expression.Assign(aleft, Expression.Convert(val, typeof(object)));
+						val = Expression.Convert(val, typeof(object));
+						return ae.Left switch {
+							Identifier id => Expression.Assign(Compile(id), val), 
+							ComputedMemberExpression cme => (Compile(cme.Object), Compile(cme.Property), val).Apply((obj, index, value) => obj[index] = value), 
+							_ => throw new NotImplementedException($"Unimplemented assignment lvalue '{ae.Left}'")
+						};
 					case Identifier id:
 						return vars.Get(id.Name);
 					case ForStatement fs:
@@ -112,6 +118,14 @@ namespace Runtime {
 								update, 
 								body
 							), loopEnd));
+					case ObjectExpression oe:
+						return Expression.New(typeof(JsObject));
+					case ComputedMemberExpression cme:
+						return (Compile(cme.Object), Compile(cme.Property)).Apply((a, b) => a[b]);
+					case StaticMemberExpression sme when sme.Property is Identifier id:
+						var binder = Microsoft.CSharp.RuntimeBinder.Binder.GetMember(CSharpBinderFlags.None, id.Name,
+							typeof(FuncCompiler), new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) });
+						return Expression.Dynamic(binder, typeof(object), Compile(sme.Object));
 					default:
 						Console.WriteLine(AstJson.ToJsonString(node, "\t"));
 						throw new NotImplementedException($"Unsupported type {node.GetType().Name}");
