@@ -126,6 +126,18 @@ namespace Runtime {
 						var binder = Microsoft.CSharp.RuntimeBinder.Binder.GetMember(CSharpBinderFlags.None, id.Name,
 							typeof(FuncCompiler), new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) });
 						return Expression.Dynamic(binder, typeof(object), Compile(sme.Object));
+					case CallExpression ce:
+						switch(ce.Callee) {
+							case StaticMemberExpression { Object: {} obj, Property: Identifier id }:
+								var icallBinder = Microsoft.CSharp.RuntimeBinder.Binder.InvokeMember(CSharpBinderFlags.None,
+									id.Name, null, 
+									typeof(FuncCompiler), new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) });
+								return Expression.Dynamic(icallBinder, typeof(object), Compile(obj));
+							default:
+								var callBinder = Microsoft.CSharp.RuntimeBinder.Binder.Invoke(CSharpBinderFlags.None, typeof(FuncCompiler), 
+									new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) });
+								return Expression.Dynamic(callBinder, typeof(object), Compile(ce.Callee));
+						}
 					default:
 						Console.WriteLine(AstJson.ToJsonString(node, "\t"));
 						throw new NotImplementedException($"Unsupported type {node.GetType().Name}");
